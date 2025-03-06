@@ -42,40 +42,37 @@ local function DeepCopy(Original)
 	return Copy
 end
 
-local function Proxify(Table)
-    local Proxy = {}
-    local Events = {}
-    local ChangedEvent = Instance.new("BindableEvent")
+local function Proxify(Table) local Proxy,Events = {},{}
+	local ChangedEvent = Instance.new("BindableEvent")
+	Table.Changed = ChangedEvent.Event
+	Proxy.Internal = Table
 
-    Table.Changed = ChangedEvent.Event
-    Proxy.Internal = Table
+	function Table:GetPropertyChangedSignal(Property)
+		local PropertyEvent = Instance.new("BindableEvent")
+		Events[Property] = Events[Property] or {}
+		table.insert(Events[Property],PropertyEvent)
+		return PropertyEvent.Event
+	end
 
-    function Table:GetPropertyChangedSignal(Property)
-        local PropertyEvent = Instance.new("BindableEvent")
-        Events[Property] = Events[Property] or {}
-        table.insert(Events[Property], PropertyEvent)
-        return PropertyEvent.Event
-    end
+	setmetatable(Proxy,{
+		__index = function(Self,Key)
+			return Table[Key]
+		end,
+		__newindex = function(Self,Key,Value)
+			local OldValue = Table[Key]
+			Table[Key] = Value
 
-    function Proxy:Get(Key)
-        return Table[Key]
-    end
+			ChangedEvent:Fire(Key,Value,OldValue)
+			if Events[Key] then
+				for Index,Event in ipairs(Events[Key]) do
+					Event:Fire(Value,OldValue)
+				end
+			end
+		end
+	})
 
-    function Proxy:Set(Key, Value)
-        local OldValue = Table[Key]
-        Table[Key] = Value
-
-        ChangedEvent:Fire(Key, Value, OldValue)
-        if Events[Key] then
-            for _, Event in ipairs(Events[Key]) do
-                Event:Fire(Value, OldValue)
-            end
-        end
-    end
-
-    return Proxy
+	return Proxy
 end
-
 
 local function GetType(Object,Default,Type,UseProxify)
 	if typeof(Object) == Type then
