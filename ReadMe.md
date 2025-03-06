@@ -1,6 +1,6 @@
 # ReadMe
 ### Raw source: <a href='https://raw.githubusercontent.com/Reload-astro/bracket-v3.3-edit/refs/heads/main/source.lua' target="_blank">Here</a>
-### Repository: <a href='https://github.com/AlexR32/Roblox](https://github.com/AlexR32/Bracket' target="_blank">Here</a>
+### Repository: <a href='https://github.com/AlexR32/Bracket' target="_blank">Here</a>
 
 # Example:
 ```lua
